@@ -61,7 +61,42 @@ I. Dynamic String Building :
 $query = "SELECT * FROM table WHERE field = '$_GET["input"]'";
 
 // a dynamically built sql string statement in .NET
-query = "SELECT * FROM table WHERE field = '" +
-request.getParameter("input") + "'";
+query = "SELECT * FROM table WHERE field = '" + request.getParameter("input") + "' ";
 
+II. Incorrectly Handled Escape Characters:
+------------------------------------------
+
+# A quote is code that it needs to run and anything encapsulated by a quote is data
+#### Example of code for a very simple application that passes user input directly to a dynamically created SQL statement :
+
+// build dynamic SQL statement
+$SQL = "SELECT * FROM table WHERE field = '$_GET["userid"]'";
+
+// execute sql statement
+$result = mysql_query($SQL);
+
+// check to see how many rows were returned from the database
+$rowcount = mysql_num_rows($result);
+
+// iterate through the record set returned
+$row = 1;
+while ($db_field = mysql_fetch_assoc($result)) {
+  if ($row <= $rowcount){
+  print $db_field[$row] . "<BR>";
+  $row++;
+  }
+}
+
+# LOAD_FILE : function that reads a file and returns the file contents as a string
+# To use it :
+    - the file must be located on the database server host
+    - the full pathname to the file must be provided as input to the function
+    - The calling user must also have the FILE privilege
+    
+# The following statement, if entered as input, may allow an attacker to read the contents of the /etc/passwd file :
+1 UNION ALL SELECT LOAD_FILE('/etc/passwd')--
+
+// Query After Injection : 
+SELECT * FROM TABLE
+WHERE USERID = 1 UNION ALL SELECT LOAD_FILE('/etc/passwd')--
 
